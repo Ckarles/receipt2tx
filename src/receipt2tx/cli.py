@@ -5,14 +5,8 @@ import typing as t
 import click
 import typer
 
-from .image_fetch import backends
+from .image_fetch.backends import factory
 
-
-# List of supported URI protocols
-SUPPORTED_URI_PROTOCOLS = [
-    f"{uri_protocol}://"
-    for uri_protocol in backends.SUPPORTED_URI_PROTOCOL_TO_BACKEND.keys()
-]
 
 app = typer.Typer()
 
@@ -30,7 +24,7 @@ class URICustomClassParser(click.ParamType):
 
     def convert(self, value, param, ctx):
         try:
-            return backends.select_backend_from_uri_raw(value)
+            return factory.select_backend_from_uri_raw(value)
         except ValueError as e:
             self.fail(str(e), param, ctx)
 
@@ -38,13 +32,13 @@ class URICustomClassParser(click.ParamType):
 @app.command()
 def list_new_receipts(
     receipts_uris: t.Annotated[
-        list[backends.Backend],
+        list[factory.Backend],
         typer.Option(
             "--receipts_uri",
             "-u",
             metavar="URI",
             click_type=URICustomClassParser(),
-            help=f"Receipts backend URI. Use this option multiple times to add multiple URIs. Supported URI protocols: {SUPPORTED_URI_PROTOCOLS}",
+            help=f"Receipts backend URI. Use this option multiple times to add multiple URIs. Supported URI protocols: {factory.SUPPORTED_URI_PROTOCOLS}",
         ),
     ],
 ) -> None:

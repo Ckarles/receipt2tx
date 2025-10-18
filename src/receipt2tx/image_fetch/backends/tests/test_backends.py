@@ -1,14 +1,16 @@
 import pytest
-from .. import backends
+
+from ..backend_local import Local
+from .. import factory
 
 # Define test cases using parametrize: (URI_input, expected_backend_type, *expected_args)
 # The order in the tuple matters and aligns with the test function arguments.
 test_uris = [
     # Local File URIs
-    ("file:///var/my-files/sample", backends.Local, "/var/my-files/sample"),
+    ("file:///var/my-files/sample", Local, "/var/my-files/sample"),
     (
         "file://data/in",
-        backends.Local,
+        Local,
         "data/in",
     ),  # Technically invalid but tests logic resilience
     ## S3 URIs
@@ -27,13 +29,13 @@ def test_parse_valid_uris(raw_uri, expected_type, expected_args):
     """Tests successful parsing of known backend URIs."""
 
     # 1. ACT: Call the function
-    backend = backends.select_backend_from_uri_raw(raw_uri)
+    backend = factory.select_backend_from_uri_raw(raw_uri)
 
     # 2. ASSERT: Check the returned object type
     assert isinstance(backend, expected_type)
 
     # 3. ASSERT: Check the extracted arguments based on type
-    if type(backend) is backends.Local:
+    if type(backend) is Local:
         expected_path = expected_args
         assert str(backend.path) == expected_path, (
             "Local path should be correctly parsed."
@@ -52,14 +54,14 @@ def test_parse_valid_uris(raw_uri, expected_type, expected_args):
 def test_parse_invalid_format():
     """Tests error handling for missing scheme/delimiter."""
     with pytest.raises(ValueError) as excinfo:
-        backends.select_backend_from_uri_raw("/home/user/data")  # Missing '://'
+        factory.select_backend_from_uri_raw("/home/user/data")  # Missing '://'
     assert "Invalid URI format" in str(excinfo.value)
 
 
 def test_parse_unsupported_backend():
     """Tests error handling for a backend type that hasn't been implemented."""
     with pytest.raises(ValueError) as excinfo:
-        backends.select_backend_from_uri_raw(
+        factory.select_backend_from_uri_raw(
             "gcs://my-gcp-bucket/files"
         )  # 'gcs' is not supported by parse_uri
     assert "Unsupported backend" in str(excinfo.value)

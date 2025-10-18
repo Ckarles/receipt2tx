@@ -1,5 +1,4 @@
 import pytest
-from ..uri import parse_URI
 from .. import backends
 
 # Define test cases using parametrize: (URI_input, expected_backend_type, *expected_args)
@@ -23,12 +22,12 @@ test_uris = [
 ]
 
 
-@pytest.mark.parametrize("uri, expected_type, expected_args", test_uris)
-def test_parse_valid_uris(uri, expected_type, expected_args):
+@pytest.mark.parametrize("raw_uri, expected_type, expected_args", test_uris)
+def test_parse_valid_uris(raw_uri, expected_type, expected_args):
     """Tests successful parsing of known backend URIs."""
 
     # 1. ACT: Call the function
-    backend = parse_URI(uri)
+    backend = backends.select_backend_from_uri_raw(raw_uri)
 
     # 2. ASSERT: Check the returned object type
     assert isinstance(backend, expected_type)
@@ -53,12 +52,14 @@ def test_parse_valid_uris(uri, expected_type, expected_args):
 def test_parse_invalid_format():
     """Tests error handling for missing scheme/delimiter."""
     with pytest.raises(ValueError) as excinfo:
-        parse_URI("/home/user/data")  # Missing '://'
+        backends.select_backend_from_uri_raw("/home/user/data")  # Missing '://'
     assert "Invalid URI format" in str(excinfo.value)
 
 
 def test_parse_unsupported_backend():
     """Tests error handling for a backend type that hasn't been implemented."""
     with pytest.raises(ValueError) as excinfo:
-        parse_URI("gcs://my-gcp-bucket/files")  # 'gcs' is not supported by parse_uri
+        backends.select_backend_from_uri_raw(
+            "gcs://my-gcp-bucket/files"
+        )  # 'gcs' is not supported by parse_uri
     assert "Unsupported backend" in str(excinfo.value)

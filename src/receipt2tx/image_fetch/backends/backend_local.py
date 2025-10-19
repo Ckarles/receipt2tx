@@ -1,9 +1,11 @@
-from contextlib import contextmanager
+"""Backend to a local file system directory."""
+
 import dataclasses
 import pathlib
 import typing as t
+from contextlib import contextmanager
 
-from .abstract import Backend, URI
+from .abstract import URI, Backend
 
 
 @dataclasses.dataclass(frozen=True)
@@ -17,7 +19,8 @@ class Local(Backend):
     path: pathlib.Path
 
     @classmethod
-    def from_uri(cls, uri: URI) -> "Local":
+    def from_uri(cls, uri: URI) -> Local:
+        """Create a Local backend from a URI."""
         return cls(pathlib.Path(uri.path))
 
     def list(self) -> t.Iterator[pathlib.Path]:

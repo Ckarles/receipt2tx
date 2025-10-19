@@ -1,8 +1,12 @@
+"""Abstract classes for backend storage implementations."""
+
+import dataclasses
+import typing as t
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-import dataclasses
-import pathlib
-import typing as t
+
+if t.TYPE_CHECKING:
+    import pathlib
 
 
 @dataclasses.dataclass
@@ -13,13 +17,16 @@ class URI:
     path: str
 
     @classmethod
-    def from_uri_raw(cls, uri_raw: str) -> "URI":
+    def from_uri_raw(cls, uri_raw: str) -> URI:
+        """Parse a raw URI string into a URI object."""
         try:
             protocol, path = uri_raw.split("://", 1)
-        except ValueError:
-            raise ValueError(
-                f'Invalid URI format: "{uri_raw}" must be in the format <backend>://<path>'
+        except ValueError as e:
+            error_message = (
+                f'Invalid URI format: "{uri_raw}" '
+                f"must be in the format <backend>://<path>"
             )
+            raise ValueError(error_message) from e
         return cls(
             protocol,
             path,
@@ -31,7 +38,7 @@ class Backend(ABC):
 
     @classmethod
     @abstractmethod
-    def from_uri(cls, uri: URI) -> "Backend":
+    def from_uri(cls, uri: URI) -> Backend:
         """Create a specific backend from a URI."""
 
     @abstractmethod
@@ -44,5 +51,6 @@ class Backend(ABC):
         """Fetch a file from the backend and return it as a stream of bytes.
 
         Fetch has to yield streams implementing read seek and tell methods.
-        Often, this means the file will have to be temporarily stored in memory or in the file system.
+        Often, this means the file will have to be temporarily stored in
+        memory or in the file system.
         """

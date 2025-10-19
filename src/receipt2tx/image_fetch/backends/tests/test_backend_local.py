@@ -1,12 +1,12 @@
-import pytest
+import os
 import pathlib
 import tempfile
 import typing as t
-import os
 
-from ..backend_local import Local
+import pytest
+
 from ..abstract import URI
-
+from ..backend_local import Local
 
 unit = pytest.mark.unit
 integration = pytest.mark.integration
@@ -16,9 +16,9 @@ integration = pytest.mark.integration
 
 
 @pytest.fixture(scope="session")
-def integration_root_dir() -> t.Generator[pathlib.Path, None, None]:
-    """
-    Creates a temporary root directory for all integration tests in this session.
+def integration_root_dir() -> t.Generator[pathlib.Path]:
+    """Create a temporary root directory for all integration tests in this session.
+
     This is the recommended place for session-scoped temporary directories.
     """
     # Use tempfile.TemporaryDirectory to ensure automatic cleanup
@@ -27,23 +27,22 @@ def integration_root_dir() -> t.Generator[pathlib.Path, None, None]:
         yield pathlib.Path(tmp_dir)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def local_backend_fixture(
     integration_root_dir: pathlib.Path,
-) -> t.Generator[Local, None, None]:
-    """
-    Creates a temporary directory for a specific test and a Local instance pointing to it.
+) -> Local:
+    """Create a temporary directory for a specific test.
+
+    Return a Local instance pointing to it.
+
     This ensures test isolation.
     """
     # Create a unique subdirectory for this specific test function
     test_dir = integration_root_dir / os.urandom(8).hex()
     test_dir.mkdir(parents=True, exist_ok=True)
 
-    # Setup: Create the Local backend instance
-    local_backend = Local(path=test_dir)
-
     # Yield the backend instance
-    yield local_backend
+    return Local(path=test_dir)
 
     # Teardown (though handled by integration_root_dir cleanup, this is good practice
     # if you needed function-level cleanup)
@@ -54,7 +53,7 @@ def local_backend_fixture(
 
 
 @unit
-def test_local_from_uri_valid():
+def test_local_from_uri_valid() -> None:
     """Unit test for the URI parsing logic."""
     raw_uri = "file:///path/to/local/dir"
     uri = URI.from_uri_raw(raw_uri)
@@ -66,7 +65,7 @@ def test_local_from_uri_valid():
 
 
 @unit
-def test_local_from_uri_file_protocol_check():
+def test_local_from_uri_file_protocol_check() -> None:
     """Unit test to ensure the protocol is 'file' (implicit test of the URI class)."""
     raw_uri = "file:///data"
     uri = URI.from_uri_raw(raw_uri)
@@ -80,14 +79,14 @@ def test_local_from_uri_file_protocol_check():
 
 
 @integration
-def test_list_empty_directory(local_backend_fixture: Local):
+def test_list_empty_directory(local_backend_fixture: Local) -> None:
     """Test 'list' on a newly created, empty directory."""
     files = list(local_backend_fixture.list())
     assert files == []
 
 
 @integration
-def test_list_with_files(local_backend_fixture: Local):
+def test_list_with_files(local_backend_fixture: Local) -> None:
     """Test 'list' correctly finds only files, ignoring subdirectories."""
     # Arrange: Create test files and a subdirectory
     file1 = local_backend_fixture.path / "image1.jpg"
@@ -103,7 +102,8 @@ def test_list_with_files(local_backend_fixture: Local):
 
     # Assert
     # We expect exactly two file paths back
-    assert len(files) == 2
+    expected_files_length = 2
+    assert len(files) == expected_files_length
     # Ensure both files are present and the subdir is absent
     assert file1 in files
     assert file2 in files
@@ -111,9 +111,8 @@ def test_list_with_files(local_backend_fixture: Local):
 
 
 @integration
-def test_fetch_single_file(local_backend_fixture: Local):
+def test_fetch_single_file(local_backend_fixture: Local) -> None:
     """Test 'fetch' returns a stream with the correct content."""
-
     # Arrange: Create a test file
     file_name = "test_fetch.txt"
     file_path = local_backend_fixture.path / file_name
@@ -133,11 +132,3 @@ def test_fetch_single_file(local_backend_fixture: Local):
     # upon exiting the `with` block *inside* the `fetch` method.
     # A true streaming backend would yield an open stream/chunk,
     # but for local files, this implementation is common.
-
-    # If the Local.fetch method were designed to keep the stream open for the caller:
-    # try:
-    #     stream = next(stream_generator)
-    #     actual_content = stream.read()
-    #     assert actual_content == expected_content
-    # finally:
-    #     stream.close() # The caller (test) closes the stream

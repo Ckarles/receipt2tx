@@ -1,15 +1,11 @@
 [project]
 name = "receipt2tx"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Convert receipts to transactions"
 readme = "README.md"
-authors = [
-    { name = "Charles Durieux", email = "durieux.charles01@gmail.com" }
-]
-requires-python = ">=3.13"
-dependencies = [
-    "typer>=0.19.2",
-]
+authors = [{ name = "Charles Durieux", email = "durieux.charles01@gmail.com" }]
+requires-python = ">=3.14"
+dependencies = ["typer>=0.19.2"]
 
 [project.scripts]
 receipt2tx = "receipt2tx.cli:app"
@@ -19,6 +15,10 @@ requires = ["uv_build>=0.8.11,<0.9.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "pytest>=8.4.2",
+dev = ["pytest>=8.4.2"]
+
+[tool.pytest.ini_options]
+markers = [
+  "unit: marks tests as unit tests",
+  "integration: marks tests as integration tests",
 ]

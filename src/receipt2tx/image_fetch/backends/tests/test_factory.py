@@ -3,6 +3,10 @@ import pytest
 from ..backend_local import Local
 from .. import factory
 
+
+unit = pytest.mark.unit
+integration = pytest.mark.integration
+
 # Define test cases using parametrize: (URI_input, expected_backend_type, *expected_args)
 # The order in the tuple matters and aligns with the test function arguments.
 test_uris = [
@@ -24,6 +28,7 @@ test_uris = [
 ]
 
 
+@unit
 @pytest.mark.parametrize("raw_uri, expected_type, expected_args", test_uris)
 def test_parse_valid_uris(raw_uri, expected_type, expected_args):
     """Tests successful parsing of known backend URIs."""
@@ -51,6 +56,7 @@ def test_parse_valid_uris(raw_uri, expected_type, expected_args):
     #     )
 
 
+@unit
 def test_parse_invalid_format():
     """Tests error handling for missing scheme/delimiter."""
     with pytest.raises(ValueError) as excinfo:
@@ -58,6 +64,7 @@ def test_parse_invalid_format():
     assert "Invalid URI format" in str(excinfo.value)
 
 
+@unit
 def test_parse_unsupported_backend():
     """Tests error handling for a backend type that hasn't been implemented."""
     with pytest.raises(ValueError) as excinfo:

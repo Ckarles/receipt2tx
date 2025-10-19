@@ -1,5 +1,7 @@
+from contextlib import contextmanager
 import dataclasses
 import pathlib
+import typing as t
 
 from .abstract import Backend, URI
 
@@ -17,3 +19,18 @@ class Local(Backend):
     @classmethod
     def from_uri(cls, uri: URI) -> "Local":
         return cls(pathlib.Path(uri.path))
+
+    def list(self) -> t.Iterator[pathlib.Path]:
+        """List all source files in the backend directory.
+
+        Only returns files, not subdirectories.
+        """
+        for path in self.path.iterdir():
+            if path.is_file():
+                yield path
+
+    @contextmanager
+    def fetch(self, file_path: pathlib.Path) -> t.Iterator[t.BinaryIO]:
+        """Fetch a file from the backend and return it as a stream of bytes."""
+        with file_path.open("rb") as f:
+            yield f

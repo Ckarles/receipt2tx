@@ -9,7 +9,7 @@ from .abstract import URI, Backend
 
 
 @dataclasses.dataclass(frozen=True)
-class Local(Backend):
+class Local(Backend[pathlib.Path]):
     """Backend to a local file system directory.
 
     properties:
@@ -21,7 +21,7 @@ class Local(Backend):
     @classmethod
     def from_uri(cls, uri: URI) -> Local:
         """Create a Local backend from a URI."""
-        return cls(pathlib.Path(uri.path))
+        return cls(path=pathlib.Path(uri.path))
 
     def list(self) -> t.Iterator[pathlib.Path]:
         """List all source files in the backend directory.

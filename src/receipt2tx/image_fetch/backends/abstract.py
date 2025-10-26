@@ -5,9 +5,6 @@ import typing as t
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
-if t.TYPE_CHECKING:
-    import pathlib
-
 
 @dataclasses.dataclass
 class URI:
@@ -33,7 +30,7 @@ class URI:
         )
 
 
-class Backend(ABC):
+class Backend[T_BackendFile](ABC):
     """Abstract class for a backend storage."""
 
     @classmethod
@@ -42,12 +39,12 @@ class Backend(ABC):
         """Create a specific backend from a URI."""
 
     @abstractmethod
-    def list(self) -> t.Iterable[pathlib.Path]:
+    def list(self) -> t.Iterable[T_BackendFile]:
         """List all source files in the backend directory."""
 
     @contextmanager
     @abstractmethod
-    def fetch(self, file_path: pathlib.Path) -> t.Iterator[t.BinaryIO]:
+    def fetch(self, file_path: T_BackendFile) -> t.Iterator[t.BinaryIO]:
         """Fetch a file from the backend and return it as a stream of bytes.
 
         Fetch has to yield streams implementing read seek and tell methods.

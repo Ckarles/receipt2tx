@@ -40,10 +40,10 @@ class URICustomClassParser(click.ParamType):
 
 @app.command()
 def list_new_receipts(
-    receipts_uris: t.Annotated[
+    receipts_backends: t.Annotated[
         list[factory.Backend],
         typer.Option(
-            "--receipts_uri",
+            "--receipt-uri",
             "-u",
             metavar="URI",
             click_type=URICustomClassParser(),
